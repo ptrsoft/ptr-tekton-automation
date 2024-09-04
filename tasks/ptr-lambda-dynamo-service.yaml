@@ -1,0 +1,59 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ptr-lambda-dynamo-service-deployment
+  labels:
+    app.kubernetes.io/version: "0.2"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/categories: CLI
+    tekton.dev/tags: cli
+    tekton.dev/displayName: "ptr lambda deployment cli"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    This task performs lambda dynamo db oriented app service.
+
+  workspaces:
+    - name: shared-data
+      optional: true
+    - name: secrets
+      optional: true
+      mountPath: /tekton/home/.aws
+  params:
+    - name: SCRIPT
+      description: The deplyment script to run
+      type: string
+      default: "deploy.sh $@"
+    - name: ARGS
+      description: deploy cli arguments to be passed
+      type: array
+      default: ["help"] 
+    - name: workingDir
+      description: Working directory parameter
+      default: ""
+  steps:
+    - name: read-workspace
+      image: ubuntu
+      script: |
+        echo "$(workspaces.shared-data.path)"
+        ls -al "$(workspaces.shared-data.path)"
+    - name: echo-command-with-params
+      image: bash
+      args: [
+        "echo",
+        "$(params.SCRIPT)",
+        "$(params['ARGS'])",
+      ]
+    # - name: run-actual-script
+    #   image: bash
+    #   args: [
+    #     "$(params.SCRIPT)",
+    #     "$(params['ARGS'])",
+    #   ]
+    - name: run-actual-script
+      image: ptrsoft/ptr-tekton:latest
+      # image: ubuntu
+      script: "$(params.SCRIPT)"
+      args:
+        - "$(params.ARGS)"

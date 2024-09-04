@@ -1,0 +1,143 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ptr-lambda-service-deployment
+spec:
+  description: |
+    sparse-checkout-list-dir takes a git repository and a list of
+    directory patterns to match and lists all cloned files and directories.
+    This is an example pipeline demonstrating the following:
+      - Using the git-clone catalog Task to clone a specific set of
+        files based on directory patterns.
+      - Passing a cloned repo to subsequent Tasks using a Workspace.
+      - Ordering Tasks in a Pipeline using "runAfter" so that
+        git-clone completes before we try to read from the Workspace.
+      - Using a volumeClaimTemplate Volume as a Workspace.
+      - Avoiding hard-coded paths by using a Workspace's path variable instead. 
+  params:
+  - name: repo-url
+    type: string
+    description: The git repository URL to clone from.
+  - name: subdirectory
+    type: string
+    description: The checkout directory.
+  - name: directory
+    type: string
+    description: Read the workspace directory.
+  - name: filename
+    type: string
+    description: Display the file contents in workspace.
+  workspaces:
+  - name: shared-data
+    description: |
+      This workspace will receive the cloned git repo and be passed
+      to the next Task to list all cloned files and directories.
+  - name: secrets
+    description: |
+      This workspace will have aws secrets.
+  tasks:
+  - name: fetch-repo
+    taskRef:
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-data
+    params:
+    - name: url
+      value: $(params.repo-url) 
+    - name: subdirectory
+      value: $(params.subdirectory) 
+  - name: read-workspace
+    taskRef:
+      name: read-workspace
+    workspaces:
+    - name: shared-data
+      workspace: shared-data
+  - name: read-checkout-directory
+    taskRef:
+      name: read-directory
+    workspaces:
+    - name: shared-data
+      workspace: shared-data
+    params:
+    - name: directory
+      value: $(params.directory) 
+  - name: display-deploymentfile-contents
+    taskRef:
+      name: display-file
+    workspaces:
+    - name: shared-data
+      workspace: shared-data
+    params:
+    - name: filename
+      value: $(params.filename) 
+  - name: aws-cli-execution
+    taskRef:
+      name: aws-cli
+    workspaces:
+    - name: secrets
+      workspace: secrets
+    params:
+    - name: SCRIPT
+      value: |
+        export AWS_CONFIG_FILE=/tekton/home/.aws/config
+        export AWS_SHARED_CREDENTIALS_FILE=/tekton/home/.aws/credentials
+        echo "displaying creds"
+        cat $1
+        echo "\n"
+        echo "displaying config"
+        cat $2
+        export AWS_PROFILE=ptr
+        aws s3 ls
+        # aws s3 ls --profile ptr
+    - name: ARGS
+      value:
+        - /tekton/home/.aws/credentials
+        - /tekton/home/.aws/config
+  - name: ptr-lambda-service-deployment
+    taskRef:
+      name: ptr-lambda-dynamo-service-deployment
+    workspaces:
+    - name: secrets
+      workspace: secrets
+    - name: shared-data
+      workspace: shared-data
+    params:
+    - name: SCRIPT
+      value: |
+        $(workspaces.shared-data.path)/deploy.sh -c $1
+    - name: ARGS
+      value:
+        - $(workspaces.shared-data.path)/configs/config.yaml
+        # - configs/config.yaml
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: ptr-lambda-service-deployment-run
+spec:
+  pipelineRef:
+    name: ptr-lambda-service-deployment
+  workspaces:
+  - name: shared-data
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  - name: secrets
+    secret:
+      secretName: aws-credentials
+
+  params:
+  - name: repo-url
+    value: https://github.com/ptrsoft/ptr-lambda-service-deployment.git
+  - name: subdirectory
+    value: ""
+  - name: directory
+    value: ""
+  - name: filename
+    value: "deploy.sh"

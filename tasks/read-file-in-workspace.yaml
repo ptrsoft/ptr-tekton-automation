@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: display-file
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: filename
+      type: string
+  workspaces:
+    - name: shared-data
+  steps:
+    - name: display-file
+      image: ubuntu
+      script: cat $(workspaces.shared-data.path)/$(params.filename)
