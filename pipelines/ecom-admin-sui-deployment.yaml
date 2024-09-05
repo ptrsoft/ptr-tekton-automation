@@ -92,10 +92,10 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: ptr-lambda-service-deployment-run
+  name: ecom-admin-sui-deployment-run
 spec:
   pipelineRef:
-    name: ptr-lambda-service-deployment
+    name: ecom-admin-sui-deployment
   workspaces:
   - name: shared-data
     volumeClaimTemplate:
