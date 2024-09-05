@@ -17,15 +17,19 @@ spec:
       - Avoiding hard-coded paths by using a Workspace's path variable instead. 
   params:
   - name: repo-url
+    default: "https://github.com/ptrsoft/ptr-standalone-ui-deployment.git"
     type: string
     description: The git repository URL to clone from.
   - name: subdirectory
+    default: ""
     type: string
     description: The checkout directory.
   - name: directory
+    default: ""
     type: string
     description: Read the workspace directory.
   - name: filename
+    default: "deploy-tekton.sh"
     type: string
     description: Display the file contents in workspace.
   workspaces:
@@ -51,12 +55,16 @@ spec:
   - name: read-workspace
     taskRef:
       name: read-workspace
+    runAfter:
+    - fetch-repo
     workspaces:
     - name: shared-data
       workspace: shared-data
   - name: read-checkout-directory
     taskRef:
       name: read-directory
+    runAfter:
+    - read-workspace
     workspaces:
     - name: shared-data
       workspace: shared-data
@@ -66,6 +74,8 @@ spec:
   - name: display-deploymentfile-contents
     taskRef:
       name: display-file
+    runAfter:
+    - read-directory
     workspaces:
     - name: shared-data
       workspace: shared-data
@@ -117,4 +127,4 @@ spec:
   - name: directory
     value: ""
   - name: filename
-    value: "deploy.sh"
+    value: "deploy-tekton.sh"
