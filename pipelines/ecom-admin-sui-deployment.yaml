@@ -75,7 +75,7 @@ spec:
     taskRef:
       name: display-file
     runAfter:
-    - read-directory
+    - read-checkout-directory
     workspaces:
     - name: shared-data
       workspace: shared-data
@@ -85,6 +85,8 @@ spec:
   - name: ecom-admin-sui-deployment
     taskRef:
       name: ptr-standalone-ui-deployment
+    runAfter:
+    - display-deploymentfile-contents
     workspaces:
     - name: secrets
       workspace: secrets
