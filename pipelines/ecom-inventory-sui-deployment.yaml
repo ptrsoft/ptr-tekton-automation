@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: ecom-admin-sui-deployment
+  name: ecom-inventory-sui-deployment
 spec:
   description: |
     sparse-checkout-list-dir takes a git repository and a list of
@@ -98,16 +98,16 @@ spec:
         $(workspaces.shared-data.path)/deploy-tekton.sh -c $1
     - name: ARGS
       value:
-        - $(workspaces.shared-data.path)/configs/promodeagro-admin-website-config.yaml
+        - $(workspaces.shared-data.path)/configs/promodeagro-inventory-website-config.yaml
         # - configs/config.yaml
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: ecom-admin-sui-deployment-run
+  name: ecom-inventory-sui-deployment-run
 spec:
   pipelineRef:
-    name: ecom-admin-sui-deployment
+    name: ecom-inventory-sui-deployment
   workspaces:
   - name: shared-data
     volumeClaimTemplate:

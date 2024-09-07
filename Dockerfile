@@ -9,7 +9,7 @@ RUN apk add --no-cache aws-cli
 RUN git config --global user.name "clouderp-code"
 RUN git config --global user.email "papu.bhattacharya@ptrtechnology.com"
 RUN apk upgrade --no-cache -U && \
-  apk add --no-cache curl make gcc g++ ${NODE_BUILD_PYTHON} linux-headers binutils-gold gnupg gpg-agent libstdc++
+  apk add --no-cache grep curl make gcc g++ ${NODE_BUILD_PYTHON} linux-headers binutils-gold gnupg gpg-agent libstdc++
 RUN npm install -i -g serverless
   # RUN git version
 # RUN aws --version
