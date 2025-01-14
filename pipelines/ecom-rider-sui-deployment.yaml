@@ -104,10 +104,10 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: ecom-packer-sui-deployment-run
+  name: ecom-rider-sui-deployment-run
 spec:
   pipelineRef:
-    name: ecom-packer-sui-deployment
+    name: ecom-rider-sui-deployment
   workspaces:
   - name: shared-data
     volumeClaimTemplate:
